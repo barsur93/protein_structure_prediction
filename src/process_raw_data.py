@@ -1,7 +1,8 @@
 import gzip
 import csv
 import pandas as pd
-import numpy as np
+# import numpy as np
+
 
 class Sequences:
     @staticmethod
@@ -50,26 +51,31 @@ class Sequences:
         return sequences_df
 
     @staticmethod
-    def clean_pisces(sequences_df: pd.DataFrame, pisces_file: str) -> pd.DataFrame:
+    def clean_pisces(pisces_file: str) -> pd.DataFrame:
         pisces_df = pd.read_csv(pisces_file, sep=r'[\t ]+', engine='python')
         pisces_df.rename(columns={'Exptl.': 'source', 'R-factor': 'R_value', 'FreeRvalue': 'R_free'}, inplace=True)
-        pisces_df['pdb_id'] = pd.Series(x[0:4] for x in pisces_df['IDs'] if len(x) == 5)
-        pisces_df['chain'] = pd.Series(x[4] for x in pisces_df['IDs'] if len(x) == 5)
+        pisces_df['pdb_id'] = pd.Series(x[0:4] for x in pisces_df['IDs'] if len(x) >= 5)
+        pisces_df['chain'] = pd.Series(x[4] for x in pisces_df['IDs'] if len(x) >= 5)
         pisces_df.drop(columns=['IDs'], inplace=True)
         return pisces_df
 
-    def clean_sequences(self, sequences_df: pd.DataFrame):
+    @staticmethod
+    def combine_pdb_pisces(sequences_df: pd.DataFrame, pisces_df: pd.DataFrame) -> pd.DataFrame:
+        combined_df = sequences_df.merge(pisces_df, on=['pdb_id', 'chain'])
+        return combined_df
+
+    @staticmethod
+    def translate_to_sst3(combined_df: pd.DataFrame) -> pd.DataFrame:
         pass
-
-
-processing = Sequences()
-
-# # seq_df = processing.process_raw_sequences(raw_sequences_file='../../data/2021-07-09-ss.txt.gz')
+# processing = Sequences()
+#
+# # # seq_df = processing.process_raw_sequences(raw_sequences_file='../../data/2021-07-09-ss.txt.gz')
 # seq_df = pd.read_csv('../../data/2021-07-09-ss.csv')
-# # print(seq_df.head())
+# print(seq_df.head())
 #
 #
-# psc_df = processing.clean_pisces(seq_df, '../../data/cullpdb_pc30_res2.0_R0.25_d2021_07_02_chains10870.gz')
-# print(psc_df.head())
-
-
+# psc_df = processing.clean_pisces(pisces_file='../../data/cullpdb_pc30_res2.0_R0.25_d2021_07_02_chains10870.gz')
+# print(psc_df)
+#
+# combined = processing.combine_pdb_pisces(seq_df, psc_df)
+# print(combined[combined.pdb_id == '1FV1'].secondary_struct)
