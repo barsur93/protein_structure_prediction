@@ -18,7 +18,7 @@ class Sequences:
                     line = next_line
                     if line.startswith('>') and line.rstrip().split(':')[-1] == 'sequence':
                         line = line.replace('>', '')
-                        pdb_id, chain = line.split(':')[0], line.split(':')[1]
+                        pdb_id, chain = line.split(':')[0], line.split(':')[1].upper()
 
                         sequence = ''
                         next_line = input_file.readline()
@@ -47,7 +47,8 @@ class Sequences:
                         raise ValueError('The lengths of sequence and secondary structure does not match!')
 
         print(f'processed {i} sequences')
-        sequences_df = pd.read_csv(output_csv)  # converting to DataFrame here due to lower efficiency to writerow()
+        # print('coś')
+        sequences_df = pd.read_csv(output_csv)  # converting to DataFrame due to lower efficiency compared to writerow()
         return sequences_df
 
     @staticmethod
@@ -55,7 +56,7 @@ class Sequences:
         pisces_df = pd.read_csv(pisces_file, sep=r'[\t ]+', engine='python')
         pisces_df.rename(columns={'Exptl.': 'source', 'R-factor': 'R_value', 'FreeRvalue': 'R_free'}, inplace=True)
         pisces_df['pdb_id'] = pd.Series(x[0:4] for x in pisces_df['IDs'] if len(x) >= 5)
-        pisces_df['chain'] = pd.Series(x[4] for x in pisces_df['IDs'] if len(x) >= 5)
+        pisces_df['chain'] = pd.Series(x[4].upper() for x in pisces_df['IDs'] if len(x) >= 5)
         pisces_df.drop(columns=['IDs'], inplace=True)
         return pisces_df
 
@@ -65,17 +66,29 @@ class Sequences:
         return combined_df
 
     @staticmethod
-    def translate_to_sst3(combined_df: pd.DataFrame) -> pd.DataFrame:
-        pass
+    def generate_seq_q8_q3_representation(combined_df: pd.DataFrame) -> pd.DataFrame:
+        q8_to_q3 = {
+            ord('G'): 'H', ord('I'): 'H', ord('B'): 'E', ord('T'): 'C', ord('S'): 'C',
+        }
+        combined_df.rename(columns={'secondary_struct': 'sst_q8', 'sequence': 'seq'}, inplace=True)
+        combined_df['sst_q3'] = [seq.translate(q8_to_q3) for seq in combined_df.sst_q8]
+        df_for_modeling = combined_df[['pdb_id', 'seq', 'sst_q8', 'sst_q3']]
+        return df_for_modeling
+
+
+# testing
 # processing = Sequences()
-#
-# # # seq_df = processing.process_raw_sequences(raw_sequences_file='../../data/2021-07-09-ss.txt.gz')
+# # seq_df = processing.process_raw_sequences(raw_sequences_file='../../data/2021-07-09-ss.txt.gz')
 # seq_df = pd.read_csv('../../data/2021-07-09-ss.csv')
-# print(seq_df.head())
+# # print(seq_df.head())
 #
 #
 # psc_df = processing.clean_pisces(pisces_file='../../data/cullpdb_pc30_res2.0_R0.25_d2021_07_02_chains10870.gz')
-# print(psc_df)
+# # print(psc_df)
 #
 # combined = processing.combine_pdb_pisces(seq_df, psc_df)
-# print(combined[combined.pdb_id == '1FV1'].secondary_struct)
+# # print(combined[combined.pdb_id == '1FV1'].secondary_struct)
+#
+# df_modeling = processing.generate_seq_q8_q3_representation(combined)
+#
+# print(df_modeling.iloc[0])
