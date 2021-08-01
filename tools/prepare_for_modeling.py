@@ -12,14 +12,19 @@ def convert_to_ngrams(sequences: pd.Series, n: int) -> np.array:
         seq_list.append([item[i:i+n] for i in np.arange(len(item))])
     return np.array(seq_list, dtype=object)
 
-# tokenizer_encoder = Tokenizer()
-# tokenizer_encoder.fit_on_texts(input_grams)
-# input_data = tokenizer_encoder.texts_to_sequences(input_grams)
-# input_data = sequence.pad_sequences(input_data, maxlen=maxlen_seq, padding='post')
-#
-# tokenizer_decoder = Tokenizer(char_level=True)
-# tokenizer_decoder.fit_on_texts(target_seqs)
-# target_data = tokenizer_decoder.texts_to_sequences(target_seqs)
-# target_data = sequence.pad_sequences(target_data, maxlen=maxlen_seq, padding='post')
-# target_data = to_categorical(target_data)
-# input_data.shape, target_data.shape
+
+def tokenize_inputs(input_sequences: np.array, maxlen: int) -> np.array:
+    input_tokenizer = Tokenizer()
+    input_tokenizer.fit_on_texts(input_sequences)
+    x_seq = input_tokenizer.texts_to_sequences(input_sequences)
+    x_seq = pad_sequences(x_seq, maxlen=maxlen, padding='post')
+    return x_seq
+
+
+def tokenize_target(target_sst: pd.Series, maxlen: int) -> np.array:
+    target_tokenizer = Tokenizer(char_level=True, lower=False)
+    target_tokenizer.fit_on_texts(target_sst)
+    y_sst = target_tokenizer.texts_to_sequences(target_sst)
+    y_sst = pad_sequences(y_sst, maxlen=maxlen, padding='post')
+    y_sst = to_categorical(y_sst)
+    return y_sst
