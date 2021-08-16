@@ -51,7 +51,6 @@ class Sequences:
                         raise ValueError('The lengths of sequence and secondary structure does not match!')
 
         print(f'processed {i} sequences')
-        # print('coś')
         sequences_df = pd.read_csv(output_csv)  # converting to DataFrame due to lower efficiency compared to writerow()
         return sequences_df
 
