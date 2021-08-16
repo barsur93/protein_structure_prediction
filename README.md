@@ -1,4 +1,5 @@
-# proteinSSpredictor - protein secondary structure prediction from sequence using neural networks and ProtVec embeddings
+# proteinSSpredictor
+### protein secondary structure prediction from sequence using neural networks and ProtVec embeddings
 
 This repository aims at providing a deep-learning-based approach to predict secondary structure of the protein based on the its primary sequence of the amino acids.
 
